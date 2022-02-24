@@ -3,7 +3,7 @@ import personFn from "./personFn.js"
 
 const blue_spot = document.getElementById('blue-spot')
 const green_spot = document.getElementById('green-spot')
-const start_V = 0.005
+let start_V = 0.005
 
 const generatePersonalKey = function () {
     let alpha = new Array(7)
@@ -191,9 +191,11 @@ export default class Person {
         // ------------------------Take Video and Phone Calls-----------------------
         // -------------------------------------------------------------------------
 
-        this.takeCall('video-call', blue_spot, 1000, 200, true)
         if (!(this.personElement.classList.contains('video-call'))) {
-            this.takeCall('phone-call', green_spot, 1000, 100, false)
+            this.takeCall('phone-call', green_spot, 800, 150, false)
+        }
+        if (!(this.personElement.classList.contains('phone-call'))) {
+            this.takeCall('video-call', blue_spot, 1100, 300, true)
         }
 
         // ------------------------------------------------------------------------

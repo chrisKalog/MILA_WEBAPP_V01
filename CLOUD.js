@@ -14,12 +14,14 @@ CLOUD.MILA_MEAN_SD = [[37, 1], //BT
                       [80, 30], //HR
                       [14, 10]] //RR
 
-const MILA_PARAM = {CARDIOVASCULAR:   {weight: [ 0,  1,  1,  0,    1, -3], power: [1, 1, 1, 1]}, //BT, BP, HR, RR, Age, C
-                    DERMATOLOGY:      {weight: [ 1,  0,  0,  0,    1, -3], power: [2, 1, 1, 1]},
-                    INFECTION:        {weight: [ 1,  0,  0,  1,    1, -3], power: [1, 1, 1, 1]},
-                    RESPIRATORY:      {weight: [ 0,  0,  0,  1,    1, -3], power: [1, 1, 1, 2]},
-                    METABOLIC:        {weight: [ 1,  0,  1,  0,    1, -3], power: [1, 1, 1, 1]},
-                    GASTROINTESTINAL: {weight: [-1,  0,  0,  1,    1, -3], power: [1, 1, 1, 1]}}
+CLOUD.NO_RISK = -2
+
+const MILA_PARAM = {CARDIOVASCULAR:   {weight: [ 0,  1,  1,  0,    1, CLOUD.NO_RISK], power: [1, 1, 1, 1]}, //BT, BP, HR, RR, Age, C
+                    DERMATOLOGY:      {weight: [ 1,  0,  0,  0,    1, CLOUD.NO_RISK], power: [2, 1, 1, 1]},
+                    INFECTION:        {weight: [ 1,  0,  0,  1,    1, CLOUD.NO_RISK], power: [1, 1, 1, 1]},
+                    RESPIRATORY:      {weight: [ 0,  0,  0,  1,    1, CLOUD.NO_RISK], power: [1, 1, 1, 2]},
+                    METABOLIC:        {weight: [ 1,  0,  1,  0,    1, CLOUD.NO_RISK], power: [1, 1, 1, 1]},
+                    GASTROINTESTINAL: {weight: [-1,  0,  0,  1,    1, CLOUD.NO_RISK], power: [1, 1, 1, 1]}}
 
 const UPDATE_PARAM = function(NEW_PARAM, pop_size) {
     const split = pop_size - NEW_PARAM.length

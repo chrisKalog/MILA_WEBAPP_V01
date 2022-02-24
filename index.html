@@ -43,9 +43,11 @@
 
 				<p id='intro-words-1' class="hidden">In 2041, big tech giants are trading healthcare diagnosis for data.
 				</p>
-				<p id='intro-words-2' class="hidden">MILA.HEALTH allows patients to contribute to the nation’s healthcare, without their data ever leaving their phone.</p>
-				<p id='intro-words-3' class="hidden">By checking your vitals daily, many diseases can be detected before you become sympomatic. Early diagnosis always means better outcomes.</p>
-				
+				<p id='intro-words-2' class="hidden">MILA.HEALTH allows patients to contribute to the nation’s
+					healthcare, without their data ever leaving their phone.</p>
+				<p id='intro-words-3' class="hidden">By checking your vitals daily, many diseases can be detected before
+					you become sympomatic. Early diagnosis always means better outcomes.</p>
+
 				<!--------------------------------------------------------------------->
 				<!--------------------- SENSOR TRIGGERERD MESSAGES -------------------->
 				<!--------------------------------------------------------------------->
@@ -61,10 +63,22 @@
 				<!----------------- VITAL GATHERING MESSAGE SEQUENCE ------------------>
 				<!--------------------------------------------------------------------->
 
-				<p id='vitals-message-1' class="hidden">Enough data has been gathered to meet the requirement to find your vitals.</p>
-				<p id='vitals-message-2' class="hidden">Our Machine Learning algorithm identifies you from the video footage.</p>
-				<p id='vitals-message-3' class="hidden">Next, your vitals, concealed within biomarkers in your appearance, are extracted with a second ML algorithm.</p>
-				<p id='vitals-message-4' class="hidden">The vitals are then logged in your medical records which only you can access.</p>
+				<p id='vitals-message-1' class="hidden">Enough data has been gathered to meet the requirement to find
+					your vitals.</p>
+				<p id='vitals-message-2' class="hidden">Our Machine Learning algorithm identifies you from the video
+					footage.</p>
+				<p id='vitals-message-3' class="hidden">Next, your vitals, concealed within biomarkers in your
+					appearance, are extracted with a second ML algorithm.</p>
+				<p id='vitals-message-4' class="hidden">The vitals are then logged in your medical records which only
+					you can access.</p>
+
+				<!--------------------------------------------------------------------->
+				<!----------------- VITAL GATHERING MESSAGE SEQUENCE ------------------>
+				<!--------------------------------------------------------------------->
+				<p id='risk-message-1' class="hidden">From your new vitals, your risk of different diseases is calculated.</p>
+
+				<p id='see-doctor-message-1' class="hidden">One of your vitals has breached the risk threshold! You will recieve a notification from the app.</p>
+
 
 
 
@@ -92,6 +106,8 @@
 				<p id='data-stored-message' class="hidden">Your data is stored until 24 hrs since your last check and
 					your
 					phone procesor is idle.<br><br>Then, insights are generated.</p>
+
+				
 
 			</div>
 			<div id='continue-btn' class="hidden continue-btn">
@@ -124,50 +140,30 @@
 						<p id='RR'></p>
 					</div>
 				</div>
+				<div class="risk-wrap">
+					<p id='risk'>Risk</p>
+					<div class="risks">
+						<div class='risk' id="cardiovascular-risk"></div>
+						<div class='risk' id="dermatology-risk"></div>
+						<div class='risk' id="infection-risk"></div>
+						<div class='risk' id="respiratory-risk"></div>
+						<div class='risk' id="metabolic-risk"></div>
+						<div class='risk' id="gastrointestinal-risk"></div>
+					</div>
+					<br>
+				</div>
+
 				<div class="progress">
 					<p id="find"></p>
 					<p id="identify"></p>
 					<p id="extract"></p>
 				</div>
-				<div class="hidden">
-				<p id='risk'>Risk</p>
-				<div class="disease-wrap">
 
-					<div class="disease-row">
-						<p>General</p>
-						<div id='general'></div>
-					</div>
 
-					<div class="disease-row">
-						<p>Heart</p>
-						<div id='heart'></div>
-					</div>
-					<div class="disease-row">
-						<p>Skin</p>
-						<div id='skin'></div>
-					</div>
-					<div class="disease-row">
-						<p>Cancer</p>
-						<div id='cancer'></div>
-					</div>
-
-					<div class="disease-row">
-						<p>Flu</p>
-						<div id='flu'></div>
-					</div>
-					<div class="disease-row">
-						<p>Brain</p>
-						<div id='brain'></div>
-					</div>
-					<div class="disease-row">
-						<p>Lung</p>
-						<div id='lung'></div>
-					</div>
-				</div>
 			</div>
-		
-			</div>
+
 		</div>
+	</div>
 	</div>
 	<div class="">
 		<div class="balls-wrap">
