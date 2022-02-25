@@ -4,6 +4,8 @@ import Person from "./person.js"
 import * as maths from './maths.js'
 import * as diseases from './disease-graph.js'
 import sensorFn from "./sensorFn.js"
+import CLOUD from "./CLOUD.js"
+
 
 
 //FROM_RESEARCH_HOW_MUCH_DATA_NEEDED_TO_GET_VITALS
@@ -12,6 +14,8 @@ const dataRequirement = 3e6
 //SETUP//SETUP//SETUP//SETUP//SETUP//SETUP//SETUP//SETUP//SETUP//SETUP//
 
 const terminal = document.getElementById('terminal')
+
+const risks = document.querySelectorAll('.risk')
 
 const ellipse1 = document.getElementById("ellipse1")
 const ellipse2 = document.getElementById("ellipse2")
@@ -42,12 +46,25 @@ const vitalsMessage2 = document.getElementById('vitals-message-2')
 const vitalsMessage3 = document.getElementById('vitals-message-3')
 const vitalsMessage4 = document.getElementById('vitals-message-4')
 
+const seeDoctorMessage1 = document.getElementById('see-doctor-message-1')
+
+const riskMessage1 = document.getElementById('risk-message-1')
+
 const vitalsTerminalMessage1 = `------------------------------<br>
 <span class="blue">Vital</span> Extraction Initiated
 <br>-----------------------------`
 const vitalsTerminalMessage2 = 'Identifying User...'
 const vitalsTerminalMessage3 = 'Extracting Vitals from Biomarkers...'
 const vitalsTerminalMessage4 = 'Logging Vitals to Phone Memory...'
+
+const riskTerminalMessage1 = `------------------------------<br>
+<span class="blue">Risk</span> Calculation Initiated
+<br>-----------------------------`
+const riskTerminalMessage2 = 'Running Machine Learning for new vitals...<br>'
+
+const dashedLines = '<br>-----------------------------<br>'
+
+const seeDoctorTerminalMessage1 = 'Risk threshold breached - send user notification'
 
 
 const startLearning1 = document.getElementById('start-learning-1')
@@ -200,11 +217,16 @@ document.body.onkeydown = function (e) {
   }
 }
 
-function cloneBottomOfTerminal(element_id) {
+function cloneBottomOfTerminalbyID(element_id) {
   let element = document.getElementById(element_id);
   const clone_e = element.cloneNode(true)
   element.removeAttribute('id', element_id)
   clone_e.setAttribute('id', element_id)
+  terminal.prepend(clone_e);
+}
+
+function cloneBottomOfTerminalByElem(element) {
+  const clone_e = element.cloneNode(true)
   terminal.prepend(clone_e);
 }
 
@@ -235,6 +257,32 @@ function showMemory(dataType, dataElem, dataName) {
   ${dataName} Data Stored: ${data.formatted}
   <br><br>
   <div class='bar-chart' style='width:${data.dataInMemory/dataRequirement*90}%; max-width: 90%'></div>`
+}
+
+function showRisk(conditionElem, condition, risk, noRisk) {
+  let risk_scaler = 80
+  noRisk -= 0.2
+  let riskPercent = (noRisk-risk)/noRisk*risk_scaler
+  if(risk>0){
+    conditionElem.innerHTML = `<p>${condition}</p>
+    <div class='risk-bar red' style='margin: 0 1rem; width:${riskPercent}%; max-width: 90%'></div>`
+  } else{
+    conditionElem.innerHTML = `<p>${condition}</p>
+  <div class='risk-bar' style='margin: 0 1rem; width:${riskPercent}%; max-width: 90%'></div>`
+  }
+  
+}
+
+function showAllRisks() {
+  for (let i = 0; i < risks.length; i++) {
+    let diseases = Object.keys(me.phone.drive.conditions)
+    let disease_risks = Object.values(me.phone.drive.conditions)
+    console.log(`${diseases[i]} risk: ${disease_risks[i]}`)
+    showRisk(risks[i], diseases[i], disease_risks[i], CLOUD.NO_RISK)
+    cloneBottomOfTerminalByElem(risks[i])
+  }
+  messageAfterDelay(dashedLines, 10)
+
 }
 
 function showTotal() {
@@ -302,10 +350,10 @@ function showData(data_className = 'video-call', memory_type, dataType = 'video'
   }
 
   if (old_data_class == false && dataClass == true) {
-    cloneBottomOfTerminal('total-memory')
+    cloneBottomOfTerminalbyID('total-memory')
 
     for (let i = 0; i < dataType.length; i++) {
-      cloneBottomOfTerminal(element_id[i])
+      cloneBottomOfTerminalbyID(element_id[i])
     }
     showAction(memory_type[0], name, call)
 
@@ -316,6 +364,10 @@ function showData(data_className = 'video-call', memory_type, dataType = 'video'
     }
   }
 }
+
+
+
+
 
 //MAIN FUNCTION//MAIN FUNCTION//MAIN FUNCTION//MAIN FUNCTION//MAIN FUNCTION//MAIN FUNCTION//MAIN FUNCTION//
 function update(time) {
@@ -384,10 +436,28 @@ function update(time) {
       vitalsMessagesCount++
     } else if (showVitalsMessages == true && vitalsMessagesCount == 4) {
       stopSensors()
-      cloneBottomOfTerminal('vitals-wrap')
+      cloneBottomOfTerminalbyID('vitals-wrap')
+      vitalsMessagesCount++
+    } else if (showVitalsMessages == true && vitalsMessagesCount == 5) {
+      stopSensors()
+
+      //Change Vitals to demonstrate doctors process
+      me.phone.drive.conditions['DERMATOLOGY'] = -0.001
+
+      showMessage(riskMessage1)
+      messageAfterDelay(riskTerminalMessage1, 1)
+      messageAfterDelay(riskTerminalMessage2, 2)
+      setTimeout(()=>showAllRisks(),5)
       vitalsMessagesCount++
       me.start()
+
+      
+
     }
+
+
+
+
 
 
     // -------------------RISK SEQUENCE-------------------
@@ -436,33 +506,54 @@ function update(time) {
     people.forEach((person) => {
 
       if (person.phone.space('total') > dataRequirement) {
+        // FIND VITALS
         person.phone.PROCESS_DATA()
         person.phone.showVitals()
-        if (person == me && vitalsMessagesCount < 3) {
-          showVitalsMessages = true
-        } else if (person == me && vitalsMessagesCount >= 3) {
-          stopSensors()
-          messageAfterDelay(vitalsTerminalMessage1, 0)
-          messageAfterDelay(vitalsTerminalMessage2, 100)
-          messageAfterDelay(vitalsTerminalMessage3, 200)
-          messageAfterDelay(vitalsTerminalMessage4, 300)
-          setTimeout(() =>cloneBottomOfTerminal('vitals-wrap'),500)
-          setTimeout(()=>me.start(),600)
-        }
-        me.phone.PROCESS_VITALS()
+        // FIND RISKS
+        person.phone.PROCESS_VITALS()
         console.log("CONDITIONS: ")
         console.log(me.phone.drive.conditions)
-        for (const model in me.phone.drive.conditions) {
+        for (let model in me.phone.drive.conditions) {
           if (me.phone.drive.conditions[model] > 0) {
             console.log('ALERT: ' + model)
           }
         }
+        if (person == me && vitalsMessagesCount < 3) {
+          showVitalsMessages = true
+        } else if (person == me && vitalsMessagesCount >= 3) {
+          stopSensors()
+          // VITALS SEQUENCE
+          messageAfterDelay(vitalsTerminalMessage1, 0)
+          messageAfterDelay(vitalsTerminalMessage2, 100)
+          messageAfterDelay(vitalsTerminalMessage3, 200)
+          messageAfterDelay(vitalsTerminalMessage4, 300)
+          setTimeout(() => cloneBottomOfTerminalbyID('vitals-wrap'), 500)
+          setTimeout(() => me.start(), 600)
+          // RISK SEQUENCE
+          messageAfterDelay(riskTerminalMessage1, 1000)
+          messageAfterDelay(riskTerminalMessage2, 1100)
+
+          if(vitalsMessagesCount < 10){
+            me.phone.drive.conditions['DERMATOLOGY'] = 0.001
+            stopSensors()
+            showMessage(seeDoctorMessage1)
+            messageAfterDelay(seeDoctorTerminalMessage1, 10)
+            vitalsMessagesCount+=10
+          }
+          setTimeout(() => showAllRisks(), 1500)
+        }
+
+
+
+
       }
     })
 
     lightIcon(me, 'blue-spot', 'video-call')
     lightIcon(me, 'red-spot', 'CCTV')
     lightIcon(me, 'green-spot', 'phone-call')
+
+
 
   }
 
