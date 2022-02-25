@@ -28,11 +28,6 @@ function gaussian(mean, stdev) {
     return -retval;
 }
 
-const BT_ID = document.getElementById('BT')
-const BP_ID = document.getElementById('BP')
-const HR_ID = document.getElementById('HR')
-const RR_ID = document.getElementById('RR')
-
 const standardise = function(vitals, MEAN_SD) {
     const output = new Array(4)
     for (let i = 0; i < 4; i++) {
@@ -86,7 +81,6 @@ export default class Phone {
     }
     PROCESS_VITALS() {
         this.drive.MILA_param = CLOUD.GET_MILA_PARAM()
-        //console.log(CLOUD.GET_MILA_PARAM())
         const param = this.drive.MILA_param
         const x = standardise(this.drive.vitals, CLOUD.MILA_MEAN_SD)
 
@@ -101,10 +95,6 @@ export default class Phone {
         this.drive.conditions = conditions
     }
     PROCESS_DATA() {
-        const find = document.getElementById('find')
-        const indentify = document.getElementById('identify')
-        const extract = document.getElementById('extract')
-
         const stdDev = [0.5, 3, 3, 1]
         const modifier = [1000, 100, 100, 1000]
 
@@ -113,7 +103,6 @@ export default class Phone {
             recognisedHumans_TEMPSTORAGE.push(this.ALGORITHMS.humanRecognition(frame))
 
             //console.log('Finding Faces: ' + Math.round((index/this.drive.video.length)*100) + '%')
-            find.innerText = 'Finding Faces: ' + Math.round((index/this.drive.video.length)*100) + '%'
         })
 
         let data_TEMPSTORAGE = new Array()
@@ -122,7 +111,6 @@ export default class Phone {
                 data_TEMPSTORAGE.push(this.ALGORITHMS.identify(this.drive.personKey, recognisedHumans))
 
                 //console.log('Facial Recognition: ' + Math.round((index/recognisedHumans_TEMPSTORAGE.length)*100) + '%')
-                indentify.innerText = 'Facial Recognition: ' + Math.round((index/recognisedHumans_TEMPSTORAGE.length)*100) + '%'
             })
         }
         let vitals_TEMPSTORAGE = new Array()
@@ -134,7 +122,6 @@ export default class Phone {
 
                 //vitals_TEMPSTORAGE.push(this.ALGORITHMS.extractVitals(data, CLOUD.PARAM))
                 //console.log('Extracting Vitals: ' + Math.round((index/data_TEMPSTORAGE.length)*100) + '%')
-                extract.innerText = 'Extracting Vitals: ' + Math.round((index/data_TEMPSTORAGE.length)*100) + '%'
             }
         })
 
@@ -183,18 +170,6 @@ export default class Phone {
         
         vitals_TEMPSTORAGE = undefined
         data_TEMPSTORAGE = undefined
-        recognisedHumans_TEMPSTORAGE = undefined
-        
-    }
-    showVitals(){
-        const BT = maths.twoDP(this.drive.vitals[0])
-        console.log(`Body Temp: ${BT}`)
-        const BP = maths.twoDP(this.drive.vitals[1])
-        const HR = maths.twoDP(this.drive.vitals[2])
-        const RR = maths.twoDP(this.drive.vitals[3])
-        BT_ID.innerText = `      | ${BT} |`
-        BP_ID.innerText = `    | ${BP} |`
-        HR_ID.innerText = `     | ${HR} |`
-        RR_ID.innerText = ` | ${RR} |`
+        recognisedHumans_TEMPSTORAGE = undefined  
     }
 }
