@@ -1,32 +1,8 @@
 import phoneFn from "./phoneFn.js"
 import CLOUD from "./CLOUD.js"
-import * as maths from './maths.js'
+import * as m from './myMaths.js'
 
-function gaussian(mean, stdev) {
-    let y2;
-    let use_last = false;
-    let y1;
-    if (use_last) {
-        y1 = y2;
-        use_last = false;
-    } else {
-        let x1, x2, w;
-        do {
-            x1 = 2.0 * Math.random() - 1.0;
-            x2 = 2.0 * Math.random() - 1.0;
-            w = x1 * x1 + x2 * x2;
-        } while (w >= 1.0);
-        w = Math.sqrt((-2.0 * Math.log(w)) / w);
-        y1 = x1 * w;
-        y2 = x2 * w;
-        use_last = true;
-    }
-
-    let retval = mean + stdev * y1;
-    if (retval > 0)
-        return retval;
-    return -retval;
-}
+const process_noisiness = 8
 
 const standardise = function(vitals, MEAN_SD) {
     const output = new Array(4)
@@ -47,11 +23,14 @@ export default class Phone {
             'personKey': personKey,
             'video': new Array(),
             'audio': new Array(),
-            'vitals': new Array(4),
+            'vitals': new Array(),
+            'vitals_TEMPSTORAGE': new Array(),
             'conditions': new Object(),
             'MILA_param': new Object(),
             'DOB': DOB,
-            'diagnoses_data': new Array()
+            'diagnoses_data': new Array(),
+            'vital_trend': new Array(),
+            'trend_track': new Array()
         }
         this.ALGORITHMS = {
             'humanRecognition': phoneFn.humanRecognition,
@@ -79,10 +58,10 @@ export default class Phone {
         
         this.TRAIN_MILA ++
     }
-    PROCESS_VITALS() {
+    MILA_MODEL() {
         this.drive.MILA_param = CLOUD.GET_MILA_PARAM()
         const param = this.drive.MILA_param
-        const x = standardise(this.drive.vitals, CLOUD.MILA_MEAN_SD)
+        const x = standardise(this.drive.vitals, CLOUD.MEAN_SD)
 
         const conditions = new Object()
         const age = this.getAge()/100
@@ -93,83 +72,99 @@ export default class Phone {
         }
 
         this.drive.conditions = conditions
-    }
+    }  
     PROCESS_DATA() {
-        const stdDev = [0.5, 3, 3, 1]
-        const modifier = [1000, 100, 100, 1000]
-
-        let recognisedHumans_TEMPSTORAGE = new Array()
-        Array.prototype.forEach.call(this.drive.video, (frame, index) => {
-            recognisedHumans_TEMPSTORAGE.push(this.ALGORITHMS.humanRecognition(frame))
-
-            //console.log('Finding Faces: ' + Math.round((index/this.drive.video.length)*100) + '%')
-        })
-
-        let data_TEMPSTORAGE = new Array()
-        if (recognisedHumans_TEMPSTORAGE.length > 0) {
-            recognisedHumans_TEMPSTORAGE.forEach((recognisedHumans, index) => {
-                data_TEMPSTORAGE.push(this.ALGORITHMS.identify(this.drive.personKey, recognisedHumans))
-
-                //console.log('Facial Recognition: ' + Math.round((index/recognisedHumans_TEMPSTORAGE.length)*100) + '%')
-            })
-        }
-        let vitals_TEMPSTORAGE = new Array()
-        data_TEMPSTORAGE.forEach((data, index) => {
-            if (data) {
-                let extractedVitals = this.ALGORITHMS.extractVitals(data, CLOUD.PARAM)
-                extractedVitals.forEach((ele, i) => {extractedVitals[i] += (gaussian(100, 0.5)-100)})
-                vitals_TEMPSTORAGE.push(extractedVitals)
-
-                //vitals_TEMPSTORAGE.push(this.ALGORITHMS.extractVitals(data, CLOUD.PARAM))
-                //console.log('Extracting Vitals: ' + Math.round((index/data_TEMPSTORAGE.length)*100) + '%')
+        if (this.drive.video[0]) {
+            const recognisedHumans = this.ALGORITHMS.humanRecognition(this.drive.video[0])
+            if (recognisedHumans.length > 0) {
+                const data = this.ALGORITHMS.identify(this.drive.personKey, recognisedHumans)
+                if (data) {
+                    let extractedVitals = this.ALGORITHMS.extractVitals(data, CLOUD.PARAM)
+                    extractedVitals.forEach((ele, i) => {extractedVitals[i] += m.gaussian(0, CLOUD.MEAN_SD[i][1] / process_noisiness)})
+                    this.drive.vitals_TEMPSTORAGE.push(extractedVitals)
+                }
             }
-        })
-
-        recognisedHumans_TEMPSTORAGE = new Array()
-        Array.prototype.forEach.call(this.drive.audio, (frame, index) => {
-            recognisedHumans_TEMPSTORAGE.push(this.ALGORITHMS.humanRecognition(frame))
-
-            //console.log('Finding Voices: ' + Math.round((index/this.drive.audio.length)*100) + '%')
-        })
-        data_TEMPSTORAGE = new Array()
-        if (recognisedHumans_TEMPSTORAGE.length > 0) {
-            recognisedHumans_TEMPSTORAGE.forEach((recognisedHumans, index) => {
-                data_TEMPSTORAGE.push(this.ALGORITHMS.identify(this.drive.personKey, recognisedHumans))
-
-                //console.log('Voice Recognition: ' + Math.round((index/recognisedHumans_TEMPSTORAGE.length)*100) + '%')
-            })
+            this.drive.video.shift()
         }
-        data_TEMPSTORAGE.forEach((data, index) => {
-            if (data) {
-                let extractedVitals = this.ALGORITHMS.extractVitals(data, CLOUD.PARAM)
-                extractedVitals.forEach((ele, i) => {extractedVitals[i] += (gaussian(100, 0.5)-100)})
-                vitals_TEMPSTORAGE.push(extractedVitals)
-
-                //vitals_TEMPSTORAGE.push(this.ALGORITHMS.extractVitals(data, CLOUD.PARAM))
-                //console.log('Extracting Vitals: ' + Math.round((index/data_TEMPSTORAGE.length)*100) + '%')
+        if (this.drive.audio[0]) {
+            const recognisedHumans = this.ALGORITHMS.humanRecognition(this.drive.audio[0])
+            if (recognisedHumans.length > 0) {
+                const data = this.ALGORITHMS.identify(this.drive.personKey, recognisedHumans)
+                if (data) {
+                    let extractedVitals = this.ALGORITHMS.extractVitals(data, CLOUD.PARAM)
+                    extractedVitals.forEach((ele, i) => {extractedVitals[i] += m.gaussian(0, CLOUD.MEAN_SD[i][1] / process_noisiness)})
+                    this.drive.vitals_TEMPSTORAGE.push(extractedVitals)
+                }
             }
-        })
+            this.drive.audio.shift()
+        }
+    }
+    PROCESS_VITALS(time_stamp) {
+        const these_vitals = new Array(4)
+        if (this.drive.vitals_TEMPSTORAGE.length > 0) {
+            const vitals_TEMP = [[0,0],[0,0],[0,0],[0,0]]
 
+            Array.prototype.forEach.call(this.drive.vitals_TEMPSTORAGE, vitals => {
+                vitals_TEMP.forEach((vital, index) => {
+                    if (vitals[index] > 0 && vitals[index] < 200) {
+                        vital[0] += vitals[index]
+                        vital[1]++
+                    }
+                })
+            })
+
+            for (let i = 0; i < 4; i++) {
+                these_vitals[i] = m.sf((vitals_TEMP[i][0] / vitals_TEMP[i][1]), 5)
+            }
+        }
+        if (these_vitals[0] && these_vitals[1] && these_vitals[2] && these_vitals[3]) {
+            these_vitals.push(time_stamp)
+            this.drive.vitals.push(these_vitals)
+            this.drive.vitals_TEMPSTORAGE = new Array()
+        }
         this.drive.audio = new Array()
         this.drive.video = new Array()
-        
-        const vitals_TEMP = [[0,0],[0,0],[0,0],[0,0]]
-
-        vitals_TEMPSTORAGE.forEach((vitals) => {
-            vitals_TEMP.forEach((vital, index) => {
-                if (vitals[index] > 0 && vitals[index] < 200) {
-                    vital[0] += vitals[index]
-                    vital[1]++
+    }
+    ROLLING_AVERAGE(time, span) {
+        if (this.drive.vitals.length >= span) {
+            Array.prototype.forEach.call(this.drive.vitals, (vital, idx) => {
+                if (vital[4] == time) {
+                    const avg_vitals = [undefined, undefined, undefined, undefined, time]
+                    for (let v = 0; v < 4; v++) {
+                        let temp = 0
+                        for (let i = 0; i < span; i++) {
+                            temp += this.drive.vitals[idx - i][v]
+                        }
+                        avg_vitals[v] = m.sf(temp/span, 5)
+                    }
+                    this.drive.vital_trend.push(avg_vitals)
                 }
             })
-        })
-
-        for (let i = 0; i < 4; i++) {
-            this.drive.vitals[i] = Math.round((vitals_TEMP[i][0] / vitals_TEMP[i][1])*modifier[i])/modifier[i]
         }
-        
-        vitals_TEMPSTORAGE = undefined
-        data_TEMPSTORAGE = undefined
-        recognisedHumans_TEMPSTORAGE = undefined  
+    }
+    DETECT_TREND(time, span) {
+        Array.prototype.forEach.call(this.drive.vital_trend, (vital, index) => {
+            if (index >= span -1 && vital[4] == time) {
+                this.drive.trend_track.push([])
+                for (let V = 0; V < 4; V++) {
+                    let U = [[vital[4], 1]]
+                    let Y = [vital[V]]
+                    for (let i = 1; i < span; i++) {
+                        U[i] = [this.drive.vital_trend[index - i][4], 1]
+                        Y[i] = this.drive.vital_trend[index - i][V]
+                    }
+                    const theta = m.mul2(m.mul(m.invs(m.mul(m.tran(U), U)), m.tran(U)), Y)
+                    this.drive.trend_track[this.drive.trend_track.length - 1][V] = theta
+                }
+                this.drive.trend_track[this.drive.trend_track.length - 1][4] = vital[4]
+            }
+        })
+    }
+    DETECT_TREND__(time, span) {
+        if (this.drive.vital_trend.length >= span) {
+            if (this.drive.trend_track[this.drive.trend_track.length - 1][4] < time) {
+
+            }
+        }
     }
 }
