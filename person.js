@@ -63,4 +63,15 @@ export default class Person {
         }
         return appearanceFn(this.personKey, situ_vitals)
     }
+    QUICK_CONDITION (){
+        const current_vitals = this.vitals
+        let cond_vitals = current_vitals
+
+        for (let i = 0; i < 4; i++) {
+            const rand_idx = Math.round(Math.random()*3)
+            cond_vitals[rand_idx] = m.sf(current_vitals[rand_idx] + m.gaussian(0, CLOUD.MEAN_SD[rand_idx][1]), 5)
+        }
+        console.log('OLD: ' + current_vitals + '   NEW: ' + cond_vitals)
+        this.vitals = cond_vitals
+    }
 }

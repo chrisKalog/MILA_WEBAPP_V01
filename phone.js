@@ -4,6 +4,11 @@ import * as m from './myMaths.js'
 
 const process_noisiness = 8
 
+const SD_M = [100 / CLOUD.MEAN_SD[0][1],
+              100 / CLOUD.MEAN_SD[1][1],
+              100 / CLOUD.MEAN_SD[2][1],
+              100 / CLOUD.MEAN_SD[3][1]]
+
 const standardise = function(vitals, MEAN_SD) {
     const output = new Array(4)
     for (let i = 0; i < 4; i++) {
@@ -30,7 +35,10 @@ export default class Phone {
             'DOB': DOB,
             'diagnoses_data': new Array(),
             'vital_trend': new Array(),
-            'trend_track': new Array()
+            'trend_track': new Array(),
+            'trend_track_STND': new Array(),
+            'month_trend': new Array(),
+            'month_trend_STND': new Array()
         }
         this.ALGORITHMS = {
             'humanRecognition': phoneFn.humanRecognition,
@@ -146,6 +154,7 @@ export default class Phone {
         Array.prototype.forEach.call(this.drive.vital_trend, (vital, index) => {
             if (index >= span -1 && vital[4] == time) {
                 this.drive.trend_track.push([])
+                this.drive.trend_track_STND.push([])
                 for (let V = 0; V < 4; V++) {
                     let U = [[vital[4], 1]]
                     let Y = [vital[V]]
@@ -155,16 +164,48 @@ export default class Phone {
                     }
                     const theta = m.mul2(m.mul(m.invs(m.mul(m.tran(U), U)), m.tran(U)), Y)
                     this.drive.trend_track[this.drive.trend_track.length - 1][V] = theta
+                    this.drive.trend_track_STND[this.drive.trend_track_STND.length - 1][V] = theta[0] * SD_M[V]
                 }
                 this.drive.trend_track[this.drive.trend_track.length - 1][4] = vital[4]
+                this.drive.trend_track[this.drive.trend_track.length - 1][5] = this.drive.vital_trend[index - span + 1][4]
+                this.drive.trend_track_STND[this.drive.trend_track_STND.length - 1][4] = vital[4]
             }
         })
     }
-    DETECT_TREND__(time, span) {
-        if (this.drive.vital_trend.length >= span) {
-            if (this.drive.trend_track[this.drive.trend_track.length - 1][4] < time) {
-
-            }
+    MONTHLY_TREND(day, length) {
+        if (length > this.drive.vital_trend.length) {
+            length = day - this.drive.vital_trend[0][4] - 1
         }
+        let U = []
+        let Y0 = []
+        let Y1 = []
+        let Y2 = []
+        let Y3 = []
+
+        let start_end = []
+
+        let i = 1
+        start_end[0] = this.drive.vital_trend[this.drive.vital_trend.length - i][4]
+        while (this.drive.vital_trend[this.drive.vital_trend.length - i][4] >= (day-length)) {
+            const vital = this.drive.vital_trend[this.drive.vital_trend.length - i]
+            U.push([vital[4], 1])
+            Y0.push(vital[0])
+            Y1.push(vital[1])
+            Y2.push(vital[2])
+            Y3.push(vital[3])
+            start_end[1] = vital[4]
+            i++
+        }
+        const theta0 = m.mul2(m.mul(m.invs(m.mul(m.tran(U), U)), m.tran(U)), Y0)
+        const theta1 = m.mul2(m.mul(m.invs(m.mul(m.tran(U), U)), m.tran(U)), Y1)
+        const theta2 = m.mul2(m.mul(m.invs(m.mul(m.tran(U), U)), m.tran(U)), Y2)
+        const theta3 = m.mul2(m.mul(m.invs(m.mul(m.tran(U), U)), m.tran(U)), Y3)
+
+        this.drive.month_trend.push([theta0, theta1, theta2, theta3, start_end[0], start_end[1]])
+        this.drive.month_trend_STND.push([theta0[0]*SD_M[0], theta1[0]*SD_M[1], theta2[0]*SD_M[2], theta3[0]*SD_M[3], start_end[0], start_end[1]])
+        
+    }
+    CHECK_TRENDS (daily_max, monthly_max) {
+
     }
 }

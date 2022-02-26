@@ -3,7 +3,7 @@ export function roundDP(number, DP){
 }
 
 export function sf(number, sf) {
-  const DP = sf - (Math.round(Math.log10(Math.round(number))) + 1)
+  let DP = sf - (Math.round(Math.log10(Math.round(number))) + 1)
   if ((DP**2) === Infinity) {DP = sf}
   return (Math.round(number * (10**DP)) / (10**DP))
 }
